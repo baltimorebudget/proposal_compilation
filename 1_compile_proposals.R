@@ -176,13 +176,15 @@ sc_enhancements <- import("inputs/FY24_EnhancementNotes.xlsx") %>%
          NoteText = str_trim(gsub("Please complete this section ONLY if you are submitting an enhancement request that will address workload and service delivery demands.", 
                                   "", NoteText, fixed = TRUE), side = "left"),
          NoteText = gsub("([A-Za-z])\\s\\s+([A-Za-z])", "\\1\\2", NoteText)) %>%
-  pivot_wider(id_cols = Agency, names_from = NoteType, values_from = NoteText)
+  pivot_wider(id_cols = Agency, names_from = NoteType, values_from = NoteText) %>%
+  mutate(Service = str_extract(`Identifying Information`, "(?<=Service:).+(?=Contact Name:)"))
 
 agencies <- sc_enhancements$Agency
 
 for (a in agencies) {
   
   agency = str_trim(gsub('[[:digit:]]+', '', a), side = "right")
+  service = sc_enhancements$Service[sc_enhancements$Agency == a]
   #quasis need to be added here / names aren't the same as official names, MOIT/BCIT
   # agency = unique(analysts$`Agency Name - Cleaned`[analysts$`Agency Name`==a])
   

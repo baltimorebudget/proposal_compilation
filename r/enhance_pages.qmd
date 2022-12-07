@@ -20,7 +20,9 @@ description <- data %>%
 
 *The Bureau of the Budget and Management Research Enhancement Proposals*
 
-### Agency: `r agency`
+## Agency: `r agency`
+
+### Service: `r service`
 
 **Enhancement Description**: 
 
