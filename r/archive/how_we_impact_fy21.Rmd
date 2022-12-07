@@ -1,0 +1,71 @@
+---
+output: pdf_document
+title: "`r paste(x, 'Fiscal 2021 - How We Impact Questions')`" 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8.5,
+  fig.height = 5.5
+)
+
+options(knitr.table.format = "latex",
+        knitr.kable.NA = '')
+
+pms <- sc_pms %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`)
+
+style_pm_table <- function(df) {
+  df <- df %>%
+    kable(booktabs = TRUE, longtable = TRUE,
+          align = c("l", "l", rep("r", 8))) %>%
+    column_spec(2, width = "2.2in") %>%
+    column_spec(3:9, width = ".4in") %>%
+    row_spec(0, bold = TRUE) %>%
+    kable_styling(position = "center")
+}
+```
+
+```{r how_we_impact, results='asis'}
+
+questions <- sc_questions %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`) 
+
+ref <- line_item  %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`) 
+
+for (i in unique(ref$`Service ID`)) {
+
+  cat("\n\n## Service ", i, "-", 
+      unique(ref$`Service Name`[ref$`Service ID` == i]), "\n\n")
+  
+  cat("\n\n### Question 1: What steps is the Service currently taking to improve internal operations and/or to provide better service to its customers? \n\n")
+  
+  questions %>% 
+    filter(`Service ID` == i) %>%
+    extract2("Question 1") %>%
+    cat()
+  
+  cat("\n\n### Question 2: Has your agency's Equity Officer reviewed this budget proposal?\n\n")
+  
+  questions %>% 
+    filter(`Service ID` == i) %>%
+    extract2("Question 2") %>%
+    cat()
+  
+  cat("\n")
+  
+  cat("\n\n### Question 3: In this service, how is equity considered a measure of success and how does equity play a role in resource allocation decisions? Please explain your answer.\n\n")
+  
+  questions %>% 
+    filter(`Service ID` == i) %>%
+    extract2("Question 3") %>%
+    cat()
+}
+```

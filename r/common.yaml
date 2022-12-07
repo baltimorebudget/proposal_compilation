@@ -1,0 +1,8 @@
+---
+mainfont: Roboto
+fontsize: 12pt
+geometry: "left=.5in,right=.5in,top=.9in,bottom=.9in"
+subparagraph: yes
+documentclass: book
+always_allow_html: yes
+---

@@ -1,0 +1,174 @@
+---
+output: pdf_document
+title: "`r paste(x, 'Fiscal 20', params$fy, ' Budget Proposal')`" 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8.5,
+  fig.height = 5.5
+)
+
+options(knitr.table.format = "latex",
+        knitr.kable.NA = '')
+
+pms <- sc_pms %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`)
+
+questions <- sc_questions %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`)
+
+```
+
+\newpage
+
+```{r how_we_impact, results='asis'}
+
+for (i in unique(summary_agency$`Service ID`)) {
+  pm_table <- pms %>%
+    filter(`Service ID` == i) %>%
+    select(-starts_with("Service"))
+  
+
+  cat("\n\n## Service ", i, "-", 
+      unique(summary_agency$`Service Name`[summary_agency$`Service ID` == i]), "\n\n")
+  
+  summary_service <- summary_agency %>%
+    filter(`Service ID` == i) %>%
+    select(-starts_with("Agency"),-starts_with("Service"), -`Fund ID`) %>%
+    bookHelpers::bind_total_row(total_col = "Fund Name", total_name = "SERVICE TOTAL") %>%
+    bookHelpers::format_table_numbers(accuracy = 1L) %>%
+    # for formatting in the pdf
+    set_colnames(c(
+      "Fund Name", "Dollars", "Positions", "Dollars ", "Positions ", 
+      "Dollars  ", "Positions  ", "Dollars   ", "Positions   "))
+  
+    header <- c(1, 2, 2, 2, 2)
+
+    names(header) <- c(" ",
+                     paste0("Fiscal 20", params$fy - 2, " Actual"),
+                     paste0("Fiscal 20", params$fy - 1, " Budget"),
+                     paste0("Fiscal 20", params$fy, " CLS"),
+                     paste0("Fiscal 20", params$fy, " Proposal"))
+
+  kable(summary_service, booktabs = TRUE, align = c("l", rep("r", 8)), ) %>%
+    kable_styling(position = "center", latex_options = "scale_down") %>%
+    add_header_above(header = header) %>%
+    row_spec(0, bold = TRUE) %>%
+    row_spec(nrow(summary_service), bold = TRUE,
+             color = "white", background = "black") %>% # total row
+    print()
+
+  # rm(header)
+  
+  sc_service_desc %>%
+    filter(`Service ID` == i) %>%
+    extract2("Service Description") %>%
+    cat()
+  
+  if (nrow(pm_table) > 0) {
+    
+    cat("\n\n### Performance Measures\n\n")
+    
+    pm_table %>%
+      format_pm_table() %>%
+      print()
+    
+    # for (j in 1:nrow(pm_table)) {
+    #   
+    #   pm_table_indiv <- pm_table[j, ]
+    # 
+    #   format_pm_table(pm_table_indiv) %>%
+    #   print()
+    #   
+    #   story <- sc_story_service %>%
+    #     filter(Measure == pm_table_indiv$Measure) %>%
+    #     extract
+    #   story <- sc_story_service$Answer[sc_story_service$Measure == pm_table_indiv$Measure]
+    #   
+    #   if (!is_empty(story)) {
+    #     cat("\n\n", story, "\n\n")
+    #   }
+    #   
+    # }
+
+  }
+  
+  questions_service <- questions %>% 
+      filter(`Service ID` == i)
+  
+  questions_service <- list(
+    questions_service %>%
+      extract2("Question 1"),
+    questions_service %>%
+      extract2("Question 2"),
+    questions_service %>%
+      extract2("Question 3"),
+    questions_service %>%
+      extract2("Question 4"))
+  
+  cat("\n\n### Proposal Questions\n\n")
+  
+  if (is_empty(questions_service[[1]])) {
+    
+    cat("No answer for Question 1.\n\n")
+    
+  } else {
+    cat("\n\n#### Question 1: Please summarize major operational changes proposed by the Service in Fiscal 2022 using current level of service budget resources, including any proposed General Fund shifts within the Service or between services, including Internal Service Fund changes w/ a General Fund impact. Explain the reasons for these proposed changes and the impact on service delivery, operations, and stakeholders of this Service. Please include a justification for any new positions being proposed, any positions proposed to be defunded, new or amended contracts, etc. \n\n")
+    
+    cat(questions_service[[1]])
+    
+    cat("\n")
+    
+  }
+  
+  if (is_empty(questions_service[[2]])) {
+    
+    cat("No answer for Question 2.\n\n")
+    
+  } else {
+    
+    cat("\n\n#### Question 2: Where applicable, please explain any significant changes expected with regard to the availability of grant or special revenue funding in Fiscal 2022 and the impact of those expected changes.\n\n")
+    
+    cat(questions_service[[2]])
+    
+    cat("\n")
+    
+  }
+  
+  if (is_empty(questions_service[[3]])) {
+    
+    cat("No answer for Question 3.\n\n")
+    
+  } else {
+    
+    cat("\n\n#### Question 3: Are there any new COVID-related programs or expenditures being incurred by this Service that the agency anticipates a need for continuing into Fiscal 2022? If yes, please estimate the cost to sustain these expenditures into Fiscal 2022, explain why the agency anticipates a need to continue these services, and discuss the impact of these services on Baltimore’s residents.\n\n")
+    
+    cat(questions_service[[3]])
+    
+    cat("\n")
+    
+  } 
+  
+  if (is_empty(questions_service[[4]])) {
+    
+    cat("No answer for Question 4.\n\n")  
+    
+  } else {
+    
+    cat("\n\n#### Question 4: Please provide potential opportunities for savings in a post-COVID environment and the estimated dollar value of those savings. This might include new efficiencies realized as a result of teleworking, the consolidation of office space needed to carry out operations, a reduced workforce as the result of attrition and a decline in the demand for services due to COVID, etc.\n\n")
+    
+    cat(questions_service[[4]])
+    
+    cat("\n")
+    
+  }
+  
+  cat("\\newpage")
+}
+```

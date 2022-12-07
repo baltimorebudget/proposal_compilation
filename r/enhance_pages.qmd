@@ -1,0 +1,119 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+data <- sc_enhancements %>%
+  filter(Agency == a)
+
+description <- data %>%
+  select(`Enhancement Proposal`) %>%
+  mutate(`Enhancement Proposal` = gsub("2. Describe, in as much detail as possible, the new or expanded program/strategy you are proposing.", NA, `Enhancement Proposal`),
+         `Enhancement Proposal` = case_when(is.na(`Enhancement Proposal`) ~ "No description provided",
+                                            TRUE ~ `Enhancement Proposal`))
+
+# budget <- summary %>%
+#   filter(`Service ID` == id) %>%
+#   ungroup() %>%
+#   select(-`Agency Name`, -`Agency Name - Cleaned`, -`Service ID`, -`Service Name`, -`FY24 Dollars - PROP`, -`FY24 Positions - PROP`)
+# 
+# colnames(budget) <- c("Fund", "Actual $", "Actual Pos", "Adopted $", "Adopted Pos", "CLS $", "CLS Pos")
+```
+
+*The Bureau of the Budget and Management Research Enhancement Proposals*
+
+### Agency: `r agency`
+
+**Enhancement Description**: 
+
+`r description`
+
+### Budget Summary
+
+```{r budget_summary, results = 'asis'}
+
+df <- data %>%
+      select(`Enhancement Budget`) %>%
+  separate(`Enhancement Budget`, into = c("Question 3", "Question 4"), sep = "\\s+[3-4].\\s") %>%
+  mutate(`Question 3` = str_replace(`Question 3`, "3. ", ""),
+         `Question 4` = str_trim(gsub("Budget DetailNote: If you have no expenditures for a section, please mark the amount as \\$0.  If you have more than one line item for an expenditure type, feel free to include additional rows.                ", "", `Question 4`), side = "left"),
+         `Question 3` = str_trim(gsub("Budget SummaryFiscal 2024 Request", "", `Question 3`), side = "left"))
+
+cat(paste(df$`Question 3`, "\n\n"))
+
+cat(paste(df$`Question 4`, "\n\n"))
+
+```
+
+
+### Service Questions and Responses
+
+#### Advancing the Mayor's Action Plan
+
+```{r MAP, results = 'asis'}
+
+df <- data %>%
+      select(`Advancing the Mayor's Action Plan`) %>%
+  separate(`Advancing the Mayor's Action Plan`, into = c("Question 5", "Question 6", "Question 7", "Question 8"), sep = "\\s+[5-8].\\s") %>%
+  mutate(`Question 5` = str_replace(`Question 5`, "5. ", ""))
+
+cat(paste(df$`Question 5`, "\n\n"))
+
+cat(paste(df$`Question 6`, "\n\n"))
+
+cat(paste(df$`Question 7`, "\n\n"))
+
+cat(paste(df$`Question 8`, "\n\n"))
+
+```
+
+#### Workload and Service Delivery
+
+```{r workload, results = 'asis'}
+
+df <- data %>%
+    select(`Workload and Service Delivery Demands`) %>%
+  separate(`Workload and Service Delivery Demands`, into = c("Question 5", "Question 6", "Question 7", "Question 8"), sep = "\\s+[5-8].\\s") %>%
+  mutate(`Question 5` = str_replace(`Question 5`, "5. ", ""))
+
+cat(paste(df$`Question 5`, "\n\n"))
+
+cat(paste(df$`Question 6`, "\n\n"))
+
+cat(paste(df$`Question 7`, "\n\n"))
+
+cat(paste(df$`Question 8`, "\n\n"))
+
+```
+
+#### Equity and Resiliency
+
+```{r proposals, results = 'asis'}
+
+df <- data %>%
+    select(`Equity and Resiliency`) %>%
+  separate(`Equity and Resiliency`, into = c("Question 9", "Question 10", "Question 11"), sep = "\\s+(\\d){1,2}.\\s") %>%
+  mutate(`Question 9` = str_replace(`Question 9`, "9. ", ""))
+
+cat(paste(df$`Question 9`, "\n\n"))
+
+cat(paste(df$`Question 10`, "\n\n"))
+
+cat(paste(df$`Question 11`, "\n\n"))
+
+```
+
+#### Performance Impact
+
+```{r perf, results = 'asis'}
+
+df <- data %>%
+        select(`Performance Impact`) %>%
+  separate(`Performance Impact`, into = c("Question 12", "Question 13"), sep = "\\s+(\\d){1,2}.\\s") %>%
+  mutate(`Question 12` = str_replace(`Question 12`, "12. ", ""),
+         `Question 12` = str_trim(gsub("List any and all Performance Measures that will improve if your proposal is funded.  The Fiscal 2023 base performance should match your service target for that measure.  The columns of the table below should show how the base performance will improve under the enhancement scenario.  NOTE: You may also include new performance measures that are specific to the performance of the proposed enhancement program - please attach a performance measure change request for these measures. If funded, performance data should be updated to reflect the figures entered below.", "", `Question 12`), side = "left"))
+
+cat(paste(df$`Question 12`, "\n\n"))
+
+cat(paste(df$`Question 13`, "\n\n"))
+
+
+```

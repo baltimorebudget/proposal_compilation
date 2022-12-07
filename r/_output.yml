@@ -1,0 +1,6 @@
+pdf_document:
+  template: null # doesn't override custom margins
+  includes:
+    in_header: header.tex
+  latex_engine: xelatex
+  pandoc_args: './common.yaml'

@@ -1,0 +1,75 @@
+\usepackage{xcolor}
+    \usepackage{sectsty}
+    \usepackage{multicol}
+    \usepackage{booktabs}
+    \usepackage{longtable}
+    \usepackage{array}
+    \usepackage{fancyhdr}
+    \usepackage{makecell}
+    \usepackage{multirow}
+    \usepackage{placeins}
+    \usepackage{afterpage}
+    \usepackage{wrapfig}
+    \usepackage{float}
+    \usepackage{colortbl}
+    \usepackage{tabu}
+    \usepackage{threeparttable}
+    \usepackage{threeparttablex}
+    \usepackage[normalem]{ulem}
+    \usepackage{makecell}
+    \usepackage{titlesec}
+    \usepackage{fontspec}
+    \usepackage{microtype} % improves line breaks, justification
+    \usepackage{wrapfig} % allows for wrapping text around tables and figures
+    \usepackage{lscape}
+    \usepackage{pdfpages} % allows for insertion of multi-page pdfs
+    \usepackage{graphicx}
+    \pagestyle{fancy}
+    \setlength{\headheight}{15pt}
+
+    % change header/footer font size
+    \newcommand{\changefont}{%
+        \fontsize{10}{12}\selectfont
+    }
+
+    % https://stackoverflow.com/questions/40982836/latex-multicolumn-block-in-pandoc-markdown
+    \newcommand{\hideFromPandoc}[1]{#1}
+    \hideFromPandoc{
+      \let\Begin\begin
+      \let\End\end
+      }
+    \setlength{\columnsep}{2cm}
+
+    \fancyhead[LO]{\changefont\leftmark}
+    \fancyhead[LE]{\changefont{Fiscal 2022}}
+    \fancyhead[RO]{\changefont{Fiscal 2022}}
+    \fancyhead[RE]{\changefont\leftmark}
+
+    % change page number size
+    \fancyfoot[C]{\changefont\thepage}
+    \setlength{\columnseprule}{1pt}
+
+    \definecolor{custom}{RGB}{40,126,143}
+    \definecolor{custom_accent}{RGB}{128,185,196}
+
+\titleformat{\chapter}
+  {\normalfont\fontsize{30}{25}\bfseries\color{custom}}{\thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+
+% equivalent of #
+\titleformat{\section}
+  {\normalfont\fontsize{18}{22}\bfseries\color{custom}}{\thesection}{1empt}{}[{\titlerule[1.5pt]}]
+
+% equivalent of ##
+
+\titleclass{\section}{top} % start each section on a new page
+\newcommand{\sectionbreak}{\clearpage}
+
+\titlespacing*{\section}{0pt}{-2\baselineskip}{1em}
+
+\titleformat{name=\section,page=odd}{\Large\bfseries\raggedleft\color{custom}}{\thesection}{1em}{}[{\titlerule[1.5pt]}]
+\titleformat{name=\section,page=even}{\Large\bfseries\raggedright\color{custom}}{\thesection}{1em}{}[{\titlerule[1.5pt]}]
+
+% equivalent of ###
+\titleformat{\subsection}
+{\normalfont\fontsize{16}{18}\bfseries\color{custom}}{\thesubsection}{1em}{}

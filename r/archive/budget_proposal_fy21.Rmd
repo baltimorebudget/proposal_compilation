@@ -1,0 +1,142 @@
+---
+output: pdf_document
+title: "`r paste(x, 'Fiscal 2021 Budget Proposal')`" 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8.5,
+  fig.height = 5.5
+)
+
+options(knitr.table.format = "latex",
+        knitr.kable.NA = '')
+
+pms <- sc_pms %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`)
+
+style_pm_table <- function(df) {
+  df <- df %>%
+    kable(booktabs = TRUE, longtable = TRUE,
+          align = c("l", "l", rep("r", 8))) %>%
+    column_spec(2, width = "2.2in") %>%
+    column_spec(3:9, width = ".4in") %>%
+    row_spec(0, bold = TRUE) %>%
+    kable_styling(position = "center")
+}
+```
+
+# Reduction Targets
+```{r red_target, results='asis'}
+reduction_targets %>%
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-starts_with("Agency")) %>%
+  kable(booktabs = TRUE, align = c("l", "r", "r")) %>%
+  kable_styling(position = "center") %>%
+  row_spec(0, bold = TRUE)
+```
+
+# Priority Ranking
+**General, Internal Service, and Parking Management Funds only**
+```{r ranking, results='asis'}
+
+if (x %in% activity_ranking$`Agency Name - Cleaned`) {
+  ranking <- activity_ranking
+} else {
+  ranking <- service_ranking
+}
+
+ranking <- ranking %>%
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-starts_with("Agency"))
+
+
+
+if (x %in% activity_ranking$`Agency Name - Cleaned`) {
+  ranking %>%
+    kable(., booktabs = TRUE, align = c(rep("l", 4), rep("r", 3))) %>%
+    column_spec(c(1, 3), width = ".6in") %>%
+    column_spec(c(2, 4), width = "1.75in") %>%
+    kable_styling(position = "center") %>%
+    row_spec(0, bold = TRUE)
+} else {
+  ranking %>%
+    kable(., booktabs = TRUE, align = c("l", "l", rep("r", 3))) %>%
+    column_spec(1, width = ".6in") %>%
+    kable_styling(position = "center") %>%
+    row_spec(0, bold = TRUE)
+}
+```
+
+# Ranking Explanation
+```{r ranking_explanation, results='asis'}
+df %>% 
+  filter(field == "Ranking explanation") %>%
+  extract2("value") %>%
+  cat()
+```
+
+# Two-Year Budget Plan
+```{r plan, results='asis'}
+df %>% 
+  filter(field == "2-Year budget plan")  %>%
+  extract2("value") %>%
+  cat()
+```
+
+\newpage
+
+# Performance Measures and 'How We Impact' Questions by Service
+```{r how_we_impact, results='asis'}
+
+questions <- sc_questions %>% 
+  filter(`Agency Name - Cleaned` == x) %>%
+  select(-`Agency Name - Cleaned`) 
+
+for (i in unique(ranking$`Service ID`)) {
+  pm_table <- pms %>%
+    filter(`Service ID` == i) %>%
+    select(-starts_with("Service"))
+  
+  cat("\n\n## Service ", i, "-", 
+      unique(ranking$`Service Name`[ranking$`Service ID` == i]), "\n\n")
+  
+  sc_service_desc %>%
+    filter(`Service ID` == i) %>%
+    extract2("Service Description") %>%
+    cat()
+  
+  if (nrow(pm_table) > 0) {
+    pm_table %>%
+    style_pm_table() %>%
+    print()
+  }
+  
+  cat("\n\n### Question 1: What steps is the Service currently taking to improve internal operations and/or to provide better service to its customers? \n\n")
+  
+  questions %>% 
+    filter(`Service ID` == i) %>%
+    extract2("Question 1") %>%
+    cat()
+  
+  cat("\n\n### Question 2: Has your agency's Equity Officer reviewed this budget proposal?\n\n")
+  
+  questions %>% 
+    filter(`Service ID` == i) %>%
+    extract2("Question 2") %>%
+    cat()
+  
+  cat("\n")
+  
+  cat("\n\n### Question 3: In this service, how is equity considered a measure of success and how does equity play a role in resource allocation decisions? Please explain your answer.\n\n")
+  
+  questions %>% 
+    filter(`Service ID` == i) %>%
+    extract2("Question 3") %>%
+    cat()
+}
+```

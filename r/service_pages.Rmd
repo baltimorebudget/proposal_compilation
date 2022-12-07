@@ -1,0 +1,129 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+data <- sc_questions %>%
+  filter(`Service ID` == id)
+
+budget <- summary %>%
+  filter(`Service ID` == id) %>%
+  ungroup() %>%
+  select(-`Agency Name`, -`Agency Name - Cleaned`, -`Service ID`, -`Service Name`, -`FY24 Dollars - PROP`, -`FY24 Positions - PROP`)
+
+colnames(budget) <- c("Fund", "Actual $", "Actual Pos", "Adopted $", "Adopted Pos", "CLS $", "CLS Pos")
+
+```
+*The Bureau of the Budget and Management Research Budget Proposals*
+
+## Service: `r service`
+
+**Agency Name**: `r agency`
+
+**Pillar**: `r pillar`
+
+**Service Description**: `r description`
+
+### Budget Information
+
+```{r budget_summary, echo = FALSE, results = 'asis', warning=FALSE, out.width="100%"}
+##replace budget data source
+
+budget %>% 
+  adorn_totals(fill = 0) %>%
+  format_table_numbers() %>%
+  knitr::kable(format = "latex", escape = TRUE, booktabs = TRUE, align = c("l", rep("r", 6))) %>%
+  kable_styling(latex_options = c("striped","HOLD_position")) %>%
+  add_header_above(c("Funds" = 1, "FY22" = 2, "FY23" = 2, "FY24" = 2), bold = TRUE) %>%
+  row_spec(dim(budget)[1]+1, bold = TRUE) %>%
+  row_spec(0, bold = TRUE)
+
+```
+
+### Budget Proposal
+
+**FY24 Proposed Budget**: `r scales::dollar(fy24_dollars)`
+
+**FY24 Proposed Positions**: `r fy24_positions `
+
+
+```{r budget_proposal, echo = FALSE, results = 'asis', warning=FALSE, out.width="100%"}
+
+df <- data %>%
+  select(`Budget Proposal`) %>%
+  separate(`Budget Proposal`, into = c("Budget", "Question 1", "Question 2", "Question 3"), sep = "\\s+[1-3].\\s")
+
+cat(paste(df$`Question 1`, "\n\n"))
+
+cat(paste(df$`Question 2`, "\n\n"))
+
+cat(paste(df$`Question 3`, "\n\n"))
+
+```
+
+### Service Questions and Responses
+
+#### Mayor's Action Plan
+```{r MAP, echo = FALSE, results = 'asis', warning = FALSE}
+
+df <- data %>%
+  select(`Mayor's  Action Plan`) %>%
+  separate(`Mayor's  Action Plan`, into = c("Question 4", "Question 5", "Question 6"), sep = "\\s+[4-6].\\s") %>%
+  mutate(`Question 4` = str_replace(`Question 4`, "4. ", ""))
+
+cat(paste(df$`Question 4`, "\n\n"))
+
+cat(paste(df$`Question 5`, "\n\n"))
+
+cat(paste(df$`Question 6`, "\n\n"))
+```
+
+
+#### Equity
+```{r equity, echo = FALSE, results = 'asis', warning = FALSE}
+
+df <- data %>%
+  select(Equity) %>%
+    separate(Equity, into = c("Equity Description", "Question 7", "Question 8"), sep = "\\s+[7-8].\\s") %>%
+  mutate(`Question 7` = str_replace(`Question 7`, "7. ", ""),
+         `Question 8` = str_replace(`Question 8`, "8. ", ""),
+         `Equity Description` = str_replace(`Equity Description`, "Service Delivery & Equity", ""))
+
+cat(paste0("*", df$`Equity Description`, "*", " \n\n"))
+
+cat(paste(df$`Question 7`, "\n\n"))
+
+cat(paste(df$`Question 8`, "\n\n"))
+
+```
+
+
+#### Resiliency
+```{r resiliency, echo = FALSE, results = 'asis', warning = FALSE}
+df <- data %>%
+  select(`Resiliency`) %>%
+  separate(Resiliency, into = c("Resiliency Description", "Question 9"), sep = "               ") %>%
+  mutate(`Question 9` = str_replace(`Question 9`, "9. ", ""),
+         `Resiliency Description` = str_replace(`Resiliency Description`, "Service Delivery & Resiliency", ""))
+
+cat(paste0("*", df$`Resiliency Description`, "*", " \n\n"))
+
+cat(df$`Question 9`)
+
+```
+
+
+### Performance Data
+```{r pm_table, echo = FALSE, warning = FALSE, out.width = "100%"}
+  
+output <- sc_pms %>% filter(`Service ID` == id) %>%
+  select(Measure:`Target 2024`)
+
+colnames(output) <- c("Measure", "Actual", "Target", "Actual", "Target", "Actual", "Target", "Target")
+
+output %>%
+  knitr::kable(format = "latex", escape = TRUE, booktabs = TRUE, align = c("l", rep("r", 7))) %>%
+  kable_styling(latex_options = c("striped","HOLD_position")) %>%
+  add_header_above(c("Measure" = 1, "2021" = 2, "2022" = 2, "2023" = 2, "2024" = 1), bold = TRUE) %>%
+  column_spec(1, width = "2in") %>%
+  row_spec(0, bold = TRUE)
+
+```
