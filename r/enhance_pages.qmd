@@ -9,7 +9,8 @@ description <- data %>%
   mutate(`Enhancement Proposal` = gsub("2. Describe, in as much detail as possible, the new or expanded program/strategy you are proposing.", NA, `Enhancement Proposal`),
          `Enhancement Proposal` = case_when(is.na(`Enhancement Proposal`) ~ "No description provided",
                                             TRUE ~ `Enhancement Proposal`))
-
+total_cost = data$`Total Cost`
+total_positions = data$`Total Positions`
 # budget <- summary %>%
 #   filter(`Service ID` == id) %>%
 #   ungroup() %>%
@@ -30,18 +31,42 @@ description <- data %>%
 
 ### Budget Summary
 
+**Total Budget** `r total_cost `
+
+**Total Positions** `r total_positions `
+
 ```{r budget_summary, results = 'asis'}
+# 
+# 
+budget <- data %>%
+  select(Budget) %>%
+  mutate(Budget = str_trim(Budget, side = "both"),
+         Budget = gsub("Project BudgetRequested Amount", "", Budget),
+         Budget = gsub("List anticipated material and supply needs for specific aspects of program.", "", Budget),
+         Budget = gsub("List contractual service needs and anticipate costs, as well as whether the City already has a contract for this service.", "", Budget),
+         Budget = gsub("List equipment type and amount for specific aspects of program.", "", Budget),
+         Budget = gsub("     ", "\n", Budget),
+         Budget = gsub("•", "\n", Budget),
+         Budget = gsub("Amount", "", Budget),
+         Budget = gsub("List specific classifications and duties.", "", Budget),
+         Budget = gsub("\n\n", "\n", Budget),
+         Budget = gsub("Total Personnel Costs", "\nTotal Personnel Costs", Budget),
+         Budget = gsub("Total Contractual Services Costs", "\nTotal Contractual Services Costs", Budget),
+         Budget = gsub("Total Materials and Supplies Costs", "\nTotal Materials and Supplies Costs", Budget),
+         Budget = gsub("Total Equipment Costs", "\nTotal Equipment Costs", Budget),
+         Budget = gsub("TOTAL EXPENDITURES", "\nTOTAL EXPENDITURES", Budget))
+# df <- data %>%
+#       select(`Budget`) 
+#   separate(`Enhancement Budget`, into = c("Question 3", "Question 4"), sep = "\\s+[3-4].\\s") %>%
+#   mutate(`Question 3` = str_replace(`Question 3`, "3. ", ""),
+#          `Question 4` = str_trim(gsub("Budget DetailNote: If you have no expenditures for a section, please mark the amount as \\$0.  If you have more than one line item for an expenditure type, feel free to include additional rows.                ", "", `Question 4`), side = "left"),
+#          `Question 3` = str_trim(gsub("Budget SummaryFiscal 2024 Request", "", `Question 3`), side = "left"))
+# 
+# cat(paste(df$`Question 3`, "\n\n"))
+# 
+# cat(paste(df$`Question 4`, "\n\n"))
 
-df <- data %>%
-      select(`Enhancement Budget`) %>%
-  separate(`Enhancement Budget`, into = c("Question 3", "Question 4"), sep = "\\s+[3-4].\\s") %>%
-  mutate(`Question 3` = str_replace(`Question 3`, "3. ", ""),
-         `Question 4` = str_trim(gsub("Budget DetailNote: If you have no expenditures for a section, please mark the amount as \\$0.  If you have more than one line item for an expenditure type, feel free to include additional rows.                ", "", `Question 4`), side = "left"),
-         `Question 3` = str_trim(gsub("Budget SummaryFiscal 2024 Request", "", `Question 3`), side = "left"))
-
-cat(paste(df$`Question 3`, "\n\n"))
-
-cat(paste(df$`Question 4`, "\n\n"))
+cat(budget$Budget)
 
 ```
 

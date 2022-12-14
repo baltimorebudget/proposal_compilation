@@ -111,7 +111,7 @@ sc_pms %<>%
 # sc_questions <- readRDS(paste0(path$prop, "scorecard_questions.Rds"))
   # mutate_at(vars(starts_with("Question")), funs(gsub("â€™s", "'", ., fixed = TRUE)))
 
-sc_questions <- import("inputs/FY24_ServiceNotes.xlsx") %>%
+sc_questions <- import("inputs/OutcomeStat_20221209.xlsx", which = "Service") %>%
   filter(!grepl("*(MOSS)|*(Copy)|*FY23|*Protocol|*Action Plans|*FY 23", Service)) %>%
   mutate(
   # `Service ID` = str_extract(Service, "[0-9]{3}"),
@@ -137,7 +137,7 @@ sc_questions <- import("inputs/FY24_ServiceNotes.xlsx") %>%
 # sc_story <- readRDS(paste0(path$prop, "scorecard_pm_notes.Rds")) %>%
 #   filter(`PM Note Type` == "Story Behind the Curve")
 
-services = c("708")
+services = sc_questions$`Service ID`
 
 for (i in services) {
   
@@ -158,9 +158,10 @@ for (i in services) {
 }
 
 ##must label proposals as Health1 and Health2 for big agencies================
-sc_enhancements <- import("inputs/FY24_EnhancementNotes.xlsx") %>%
-  filter(Enhancement == "FY24 Enhancement") %>%
+sc_enhancements <- import("inputs/OutcomeStat_20221209.xlsx", which = "Enhancement") %>%
+  # filter(Enhancement == "FY24 Enhancement") %>%
   separate(col = Enhancement, into = c("Year", "Subservice"), sep = " - ") %>%
+  ##remember to manually add version to the data
   mutate(Version = as.character(Version),
          Agency = case_when(!is.na(Subservice) ~ paste(gsub("&#39;", "'", Scorecard), Subservice),
                              TRUE ~ paste(gsub("&#39;", "'", Scorecard), Version)),
@@ -177,7 +178,13 @@ sc_enhancements <- import("inputs/FY24_EnhancementNotes.xlsx") %>%
                                   "", NoteText, fixed = TRUE), side = "left"),
          NoteText = gsub("([A-Za-z])\\s\\s+([A-Za-z])", "\\1\\2", NoteText)) %>%
   pivot_wider(id_cols = Agency, names_from = NoteType, values_from = NoteText) %>%
-  mutate(Service = str_extract(`Identifying Information`, "(?<=Service:).+(?=Contact Name:)"))
+  mutate(Service = str_extract(`Identifying Information`, "(?<=Service:).+(?=Contact Name:)"),
+         `Enhancement Budget` = gsub("4. Budget DetailNote: If you have no expenditures for a section, please mark the amount as $0.  If you have more than one line item for an expenditure type, feel free to include additional rows.               ",
+                                     "", `Enhancement Budget`, fixed = TRUE),
+         Budget = str_trim(str_extract(`Enhancement Budget`, "(?<=Cost explanation).+"), side = "both"),
+         `Total Cost` = str_trim(str_extract(`Enhancement Budget`, "(?<=TOTAL EXPENDITURES).+(?=)"), side = "both"),
+         `Total Positions` = str_trim(str_extract(`Enhancement Budget`, "(?<=Positions Requested).+(?=Expenditure TypeCost explanation)"), side = "both"))
+
 
 agencies <- sc_enhancements$Agency
 
