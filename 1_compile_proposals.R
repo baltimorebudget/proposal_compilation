@@ -111,7 +111,7 @@ sc_pms %<>%
 # sc_questions <- readRDS(paste0(path$prop, "scorecard_questions.Rds"))
   # mutate_at(vars(starts_with("Question")), funs(gsub("â€™s", "'", ., fixed = TRUE)))
 
-sc_questions <- import("inputs/OutcomeStat_20221209.xlsx", which = "Service") %>%
+sc_questions <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Service") %>%
   filter(!grepl("*(MOSS)|*(Copy)|*FY23|*Protocol|*Action Plans|*FY 23", Service)) %>%
   mutate(
   # `Service ID` = str_extract(Service, "[0-9]{3}"),
@@ -158,12 +158,12 @@ for (i in services) {
 }
 
 ##must label proposals as Health1 and Health2 for big agencies================
-sc_enhancements <- import("inputs/OutcomeStat_20221209.xlsx", which = "Enhancement") %>%
+sc_enhancements <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Enhancement") %>%
   # filter(Enhancement == "FY24 Enhancement") %>%
   separate(col = Enhancement, into = c("Year", "Subservice"), sep = " - ") %>%
   ##remember to manually add version to the data
   mutate(Version = as.character(Version),
-         Agency = case_when(!is.na(Subservice) ~ paste(gsub("&#39;", "'", Scorecard), Subservice),
+         Agency = case_when(!is.na(Subservice) ~ paste(gsub("&#39;", "'", Scorecard), Subservice, Version),
                              TRUE ~ paste(gsub("&#39;", "'", Scorecard), Version)),
          Agency = gsub("NA", "", Agency),
          NoteText = str_trim(gsub("Please complete this section ONLY if you are submitting an enhancement request that will advance and accelerate a specific action in the Mayor's Action Plan.", 
@@ -185,6 +185,7 @@ sc_enhancements <- import("inputs/OutcomeStat_20221209.xlsx", which = "Enhanceme
          `Total Cost` = str_trim(str_extract(`Enhancement Budget`, "(?<=TOTAL EXPENDITURES).+(?=)"), side = "both"),
          `Total Positions` = str_trim(str_extract(`Enhancement Budget`, "(?<=Positions Requested).+(?=Expenditure TypeCost explanation)"), side = "both"))
 
+export_excel(sc_enhancements, "FY24 Enhancement Proposals", "outputs/FY24 Enhancement Proposals.xlsx")
 
 agencies <- sc_enhancements$Agency
 

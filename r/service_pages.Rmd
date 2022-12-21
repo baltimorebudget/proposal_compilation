@@ -24,6 +24,8 @@ colnames(budget) <- c("Fund", "Actual $", "Actual Pos", "Adopted $", "Adopted Po
 
 ### Budget Information
 
+*Budget data is from BPFS as of* `r Sys.Date() `.
+
 ```{r budget_summary, echo = FALSE, results = 'asis', warning=FALSE, out.width="100%"}
 ##replace budget data source
 
@@ -56,6 +58,12 @@ cat(paste(df$`Question 1`, "\n\n"))
 cat(paste(df$`Question 2`, "\n\n"))
 
 cat(paste(df$`Question 3`, "\n\n"))
+
+# cat(ifelse(nchar(df$`Question 1`) <= 94, paste(df$`Question 1`, "\n\n", "No answer provided", "\n\n"), paste(df$`Question 1`, "\n\n")))
+# 
+# cat(ifelse(nchar(df$`Question 2`) <= 96, paste(df$`Question 2`, "\n\n", "No answer provided", "\n\n"), paste(df$`Question 2`, "\n\n")))
+# 
+# cat(ifelse(nchar(df$`Question 3`) <= 51, paste(df$`Question 2`, "\n\n", "No answer provided", "\n\n"), paste(df$`Question 3`, "\n\n")))
 
 ```
 
