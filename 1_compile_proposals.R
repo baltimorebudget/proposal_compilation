@@ -129,20 +129,37 @@ sc_questions <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Se
          Description = str_trim(str_extract(`Identifying Information`, "(?<=escription).+(?=Service Contact)"), side = "right"),
          Pillar = str_extract(`Identifying Information`, "(?<=Pillar).+(?=Lead Agency)"),
          Agency = str_extract(`Identifying Information`, "(?<=Lead Agency).+((?=Service Description)|(?=Elongated))"),
-         `Service Name` = str_extract(Service, "(?<=: ).+"))
+         `Service Name` = str_extract(Service, "(?<=: ).+")) %>%
+  filter(!is.na(`Service ID`))
 
 ##scorecard service descriptions ===========
 # sc_service_desc <- readRDS(paste0(path$prop, "service_desc.Rds")) 
 
+##story behind the curve =====
+
 # sc_story <- readRDS(paste0(path$prop, "scorecard_pm_notes.Rds")) %>%
 #   filter(`PM Note Type` == "Story Behind the Curve")
 
+sc_story <- import("inputs/Story Behind the Curve.xlsx", skip = 4) %>%
+  select(-`...6`, -`...7`, -`...8`, -`...9`, -`...10`, -`...11`, -`...12`, -`...13`, -`...14`, -`...15`, -`...16`) %>%
+  filter(!is.na(`Note Text`)) %>%
+  fill(Name, .direction = "down") %>%
+  fill(Title, .direction = "down") %>%
+  fill(Title2, .direction = "down") %>%
+  fill(Type, .direction = "down") %>%
+  fill(`Modify Date`, .direction = "down") %>%
+  mutate(`Service ID` = str_extract(Title, "([0-9]{3}[a-d]{1})|([0-9]{3})")) %>%
+  rename(Measure = Title2, `Service Name` = Title, Tag = Name) %>%
+  filter(!is.na(`Service ID`))
+
+##rendering ======
 services = sc_questions$`Service ID`
 
 for (i in services) {
   
   info <- sc_questions %>%
-    filter(`Service ID` == i)
+    filter(`Service ID` == i) %>%
+    mutate(`Service Name` = gsub(":", "", `Service Name`))
   
   service = info$`Service Name`
   id = i
@@ -158,45 +175,45 @@ for (i in services) {
 }
 
 ##must label proposals as Health1 and Health2 for big agencies================
-sc_enhancements <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Enhancement") %>%
-  # filter(Enhancement == "FY24 Enhancement") %>%
-  separate(col = Enhancement, into = c("Year", "Subservice"), sep = " - ") %>%
-  ##remember to manually add version to the data
-  mutate(Version = as.character(Version),
-         Agency = case_when(!is.na(Subservice) ~ paste(gsub("&#39;", "'", Scorecard), Subservice, Version),
-                             TRUE ~ paste(gsub("&#39;", "'", Scorecard), Version)),
-         Agency = gsub("NA", "", Agency),
-         NoteText = str_trim(gsub("Please complete this section ONLY if you are submitting an enhancement request that will advance and accelerate a specific action in the Mayor's Action Plan.", 
-                                  "", NoteText, fixed = TRUE), side = "left"),
-         NoteText = str_trim(gsub("Instructions:  This section should reflect the total dollar amount and number of positions being requested.  Any request for positions must accurately reflect the fully-loaded costs of the positions(s), including all OPCs.  For more information you can review the personnel costs calculation under \"Part 3: BPFS Instructions\" in the Instructions document.", 
-                                  "", NoteText, fixed = TRUE), side = "left"),
-         NoteText = str_trim(gsub("Equity  Baltimore City's Equity Assessment Program defines equity as closing the gaps in policy, practice, and allocation of City resources so that race, gender, religion, sexual orientations, and income do not predict one’s success, while also improving outcomes for all. Equality provides the same resources and opportunities to all, whereas equity recognizes there are institutional and structural barriers and provides everyone with what they need to thrive.", 
-                                  "", NoteText, fixed = TRUE), side = "left"),
-         NoteText = str_trim(gsub("Resiliency  Baltimore City's Sustainability Office defines resiliency as the ability of our community to anticipate, accommodate, and positively adapt to or thrive amidst changing climate conditions or hazard events and enhance quality of life, reliable systems, economic vitality, and conservation of resources for present and future generations.", 
-                                  "", NoteText, fixed = TRUE), side = "left"),
-         NoteText = str_trim(gsub("Please complete this section ONLY if you are submitting an enhancement request that will address workload and service delivery demands.", 
-                                  "", NoteText, fixed = TRUE), side = "left"),
-         NoteText = gsub("([A-Za-z])\\s\\s+([A-Za-z])", "\\1\\2", NoteText)) %>%
-  pivot_wider(id_cols = Agency, names_from = NoteType, values_from = NoteText) %>%
-  mutate(Service = str_extract(`Identifying Information`, "(?<=Service:).+(?=Contact Name:)"),
-         `Enhancement Budget` = gsub("4. Budget DetailNote: If you have no expenditures for a section, please mark the amount as $0.  If you have more than one line item for an expenditure type, feel free to include additional rows.               ",
-                                     "", `Enhancement Budget`, fixed = TRUE),
-         Budget = str_trim(str_extract(`Enhancement Budget`, "(?<=Cost explanation).+"), side = "both"),
-         `Total Cost` = str_trim(str_extract(`Enhancement Budget`, "(?<=TOTAL EXPENDITURES).+(?=)"), side = "both"),
-         `Total Positions` = str_trim(str_extract(`Enhancement Budget`, "(?<=Positions Requested).+(?=Expenditure TypeCost explanation)"), side = "both"))
-
-export_excel(sc_enhancements, "FY24 Enhancement Proposals", "outputs/FY24 Enhancement Proposals.xlsx")
-
-agencies <- sc_enhancements$Agency
-
-for (a in agencies) {
-  
-  agency = str_trim(gsub('[[:digit:]]+', '', a), side = "right")
-  service = sc_enhancements$Service[sc_enhancements$Agency == a]
-  #quasis need to be added here / names aren't the same as official names, MOIT/BCIT
-  # agency = unique(analysts$`Agency Name - Cleaned`[analysts$`Agency Name`==a])
-  
-  rmarkdown::render("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/r/enhance_pages.qmd",
-                    output_file = paste0("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/outputs/fy", params$fy, "/", str_trim(a, side = "right"), " Budget Enhancements.pdf"))
-  
-}
+# sc_enhancements <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Enhancement") %>%
+#   # filter(Enhancement == "FY24 Enhancement") %>%
+#   separate(col = Enhancement, into = c("Year", "Subservice"), sep = " - ") %>%
+#   ##remember to manually add version to the data
+#   mutate(Version = as.character(Version),
+#          Agency = case_when(!is.na(Subservice) ~ paste(gsub("&#39;", "'", Scorecard), Subservice, Version),
+#                              TRUE ~ paste(gsub("&#39;", "'", Scorecard), Version)),
+#          Agency = gsub("NA", "", Agency),
+#          NoteText = str_trim(gsub("Please complete this section ONLY if you are submitting an enhancement request that will advance and accelerate a specific action in the Mayor's Action Plan.", 
+#                                   "", NoteText, fixed = TRUE), side = "left"),
+#          NoteText = str_trim(gsub("Instructions:  This section should reflect the total dollar amount and number of positions being requested.  Any request for positions must accurately reflect the fully-loaded costs of the positions(s), including all OPCs.  For more information you can review the personnel costs calculation under \"Part 3: BPFS Instructions\" in the Instructions document.", 
+#                                   "", NoteText, fixed = TRUE), side = "left"),
+#          NoteText = str_trim(gsub("Equity  Baltimore City's Equity Assessment Program defines equity as closing the gaps in policy, practice, and allocation of City resources so that race, gender, religion, sexual orientations, and income do not predict one’s success, while also improving outcomes for all. Equality provides the same resources and opportunities to all, whereas equity recognizes there are institutional and structural barriers and provides everyone with what they need to thrive.", 
+#                                   "", NoteText, fixed = TRUE), side = "left"),
+#          NoteText = str_trim(gsub("Resiliency  Baltimore City's Sustainability Office defines resiliency as the ability of our community to anticipate, accommodate, and positively adapt to or thrive amidst changing climate conditions or hazard events and enhance quality of life, reliable systems, economic vitality, and conservation of resources for present and future generations.", 
+#                                   "", NoteText, fixed = TRUE), side = "left"),
+#          NoteText = str_trim(gsub("Please complete this section ONLY if you are submitting an enhancement request that will address workload and service delivery demands.", 
+#                                   "", NoteText, fixed = TRUE), side = "left"),
+#          NoteText = gsub("([A-Za-z])\\s\\s+([A-Za-z])", "\\1\\2", NoteText)) %>%
+#   pivot_wider(id_cols = Agency, names_from = NoteType, values_from = NoteText) %>%
+#   mutate(Service = str_extract(`Identifying Information`, "(?<=Service:).+(?=Contact Name:)"),
+#          `Enhancement Budget` = gsub("4. Budget DetailNote: If you have no expenditures for a section, please mark the amount as $0.  If you have more than one line item for an expenditure type, feel free to include additional rows.               ",
+#                                      "", `Enhancement Budget`, fixed = TRUE),
+#          Budget = str_trim(str_extract(`Enhancement Budget`, "(?<=Cost explanation).+"), side = "both"),
+#          `Total Cost` = str_trim(str_extract(`Enhancement Budget`, "(?<=TOTAL EXPENDITURES).+(?=)"), side = "both"),
+#          `Total Positions` = str_trim(str_extract(`Enhancement Budget`, "(?<=Positions Requested).+(?=Expenditure TypeCost explanation)"), side = "both"))
+# 
+# export_excel(sc_enhancements, "FY24 Enhancement Proposals", "outputs/FY24 Enhancement Proposals.xlsx")
+# 
+# agencies <- sc_enhancements$Agency
+# 
+# for (a in agencies) {
+#   
+#   agency = str_trim(gsub('[[:digit:]]+', '', a), side = "right")
+#   service = sc_enhancements$Service[sc_enhancements$Agency == a]
+#   #quasis need to be added here / names aren't the same as official names, MOIT/BCIT
+#   # agency = unique(analysts$`Agency Name - Cleaned`[analysts$`Agency Name`==a])
+#   
+#   rmarkdown::render("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/r/enhance_pages.qmd",
+#                     output_file = paste0("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/outputs/fy", params$fy, "/", str_trim(a, side = "right"), " Budget Enhancements.pdf"))
+#   
+# }
