@@ -51,24 +51,22 @@ budget %>%
 
 df <- data %>%
   select(`Budget Proposal`) %>%
-  separate(`Budget Proposal`, into = c("Budget", "Question 1", "Question 2", "Question 3"), sep = "\\s+[1-3].\\s") 
-
-df <- df %>%
+  separate(`Budget Proposal`, into = c("Budget", "Question 1", "Question 2", "Question 3"), sep = "\\s+[1-3].\\s") %>%
   mutate(`Question 1` = gsub("Explain any budget changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.",
-                             "Explain any budget changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.\n\n", 
+                             "",
                               `Question 1`),
-         `Question 2` = gsub("Explain any staffing changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.", 
-                             "Explain any staffing changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.\n\n", 
+         `Question 2` = gsub("Explain any staffing changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.",
+                             "",
                              `Question 2`),
-         `Question 3` = gsub("Describe how these changes impact service delivery.", 
-                             "Describe how these changes impact service delivery.\n\n", 
+         `Question 3` = gsub("Describe how these changes impact service delivery.",
+                             "",
                              `Question 3`))
 
-cat(paste(df$`Question 1`, "\n\n"))
-
-cat(paste(df$`Question 2`, "\n\n"))
-
-cat(paste(df$`Question 3`, "\n\n"))
+# cat(paste(df$`Question 1`, "\n\n"))
+# 
+# cat(paste(df$`Question 2`, "\n\n"))
+# 
+# cat(paste(df$`Question 3`, "\n\n"))
 
 # cat(ifelse(nchar(df$`Question 1`) <= 94, paste(df$`Question 1`, "\n\n", "No answer provided", "\n\n"), paste(df$`Question 1`, "\n\n")))
 # 
@@ -78,31 +76,57 @@ cat(paste(df$`Question 3`, "\n\n"))
 
 ```
 
+1. Explain any budget changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.
+
+```{r Q1, echo = FALSE, results = 'asis', warning=FALSE}
+
+cat(df$`Question 1`)
+
+```
+
+2. Explain any staffing changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.
+
+```{r Q2, echo = FALSE, results = 'asis', warning=FALSE}
+
+cat(df$`Question 2`)
+
+```
+
+3. Describe how these changes impact service delivery.
+
+```{r Q3, echo = FALSE, results = 'asis', warning=FALSE}
+
+cat(df$`Question 3`)
+
+```
+
 ### Service Questions and Responses
 
 #### Mayor's Action Plan
-```{r MAP, echo = FALSE, results = 'asis', warning = FALSE}
+```{r MAP, echo = FALSE, results='asis', warning = FALSE}
 
 df <- data %>%
   select(`Mayor's  Action Plan`) %>%
   separate(`Mayor's  Action Plan`, into = c("Question 4", "Question 5", "Question 6"), sep = "\\s+[4-6].\\s") %>%
-  mutate(`Question 4` = str_replace(`Question 4`, "4. ", ""),
-         `Question 4` = gsub("Action Plan does this service connect to?", 
-                             "Action Plan does this service connect to?\n\n", 
-                             `Question 4`),
-          `Question 5` = gsub("Action Plan does this service connect to?", 
-                              "Action Plan does this service connect to?\n\n", 
-                              `Question 5`),
-          `Question 6` = gsub("List specific actions planned for FY2024 that are tied to these goals and actions.", 
-                              "List specific actions planned for FY2024 that are tied to these goals and actions.\n\n", 
-                              `Question 6`))
+  mutate(`Question 4` = str_replace(`Question 4`, "4. ", ""))
+         # `Question 4` = gsub("Action Plan does this service connect to?", 
+         #                     "Action Plan does this service connect to?\n\n", 
+         #                     `Question 4`),
+         #  `Question 5` = gsub("Action Plan does this service connect to?", 
+         #                      "Action Plan does this service connect to?\n\n", 
+         #                      `Question 5`),
+         #  `Question 6` = gsub("List specific actions planned for FY2024 that are tied to these goals and actions.", 
+         #                      "List specific actions planned for FY2024 that are tied to these goals and actions.\n\n", 
+         #                      `Question 6`))
 
 cat(paste(df$`Question 4`, "\n\n"))
 
 cat(paste(df$`Question 5`, "\n\n"))
 
-cat(paste(df$`Question 6`, "\n\n"))
+cat(df$`Question 6`)
+
 ```
+
 
 
 #### Equity
@@ -113,33 +137,34 @@ df <- data %>%
     separate(Equity, into = c("Equity Description", "Question 7", "Question 8"), sep = "\\s+[7-8].\\s") %>%
   mutate(`Question 7` = str_replace(`Question 7`, "7. ", ""),
          `Question 8` = str_replace(`Question 8`, "8. ", ""),
-         `Equity Description` = str_replace(`Equity Description`, "Service Delivery & Equity", ""),
-         `Question 7` = gsub("How does this service address these disparities?",
-                             "How does this service address these disparities?\n\n",
-                             `Question 7`),
-        `Question 8` = gsub("What data is used to assess the service's impact on reducing these disparities?",
-                   "What data is used to assess the service's impact on reducing these disparities?\n\n",
-                   `Question 8`))
+         `Equity Description` = str_replace(`Equity Description`, "Service Delivery & Equity", ""))
+        #  `Question 7` = gsub("How does this service address these disparities?",
+        #                      "How does this service address these disparities?\n\n",
+        #                      `Question 7`),
+        # `Question 8` = gsub("What data is used to assess the service's impact on reducing these disparities?",
+        #            "What data is used to assess the service's impact on reducing these disparities?\n\n",
+        #            `Question 8`))
 
 cat(paste0("*", df$`Equity Description`, "*", " \n\n"))
 
 cat(paste(df$`Question 7`, "\n\n"))
 
-cat(paste(df$`Question 8`, "\n\n"))
+cat(df$`Question 8`)
 
 ```
 
 
 #### Resiliency
 ```{r resiliency, echo = FALSE, results = 'asis', warning = FALSE}
+
 df <- data %>%
   select(`Resiliency`) %>%
   separate(Resiliency, into = c("Resiliency Description", "Question 9"), sep = "               ") %>%
   mutate(`Question 9` = str_replace(`Question 9`, "9. ", ""),
-         `Resiliency Description` = str_replace(`Resiliency Description`, "Service Delivery & Resiliency", ""),
-         `Question 9` = gsub("If possible, provide examples of how this service is doing this currently or has done this in the past.",
-                             "If possible, provide examples of how this service is doing this currently or has done this in the past.\n\n", 
-                             `Question 9`))
+         `Resiliency Description` = str_replace(`Resiliency Description`, "Service Delivery & Resiliency", ""))
+         # `Question 9` = gsub("If possible, provide examples of how this service is doing this currently or has done this in the past.",
+         #                     "If possible, provide examples of how this service is doing this currently or has done this in the past.\n\n", 
+         #                     `Question 9`))
 
 cat(paste0("*", df$`Resiliency Description`, "*", " \n\n"))
 
@@ -165,21 +190,22 @@ output %>%
 
 ```
 
-```{r curve, echo = FALSE, warning = FALSE}
+
+
+```{r curve, echo = FALSE, warning = FALSE, results='asis'}
 
 df <- sc_story %>%
   filter(id == `Service ID`) %>%
-  select(Measure, `Note Text`, `Modify Date`)
+  select(Measure, `Note Text`, `Modify Date`) %>%
+  mutate(`Measure` = gsub("#", "number of", `Measure`))
 
 cat(paste0("Story Behind the Curve updated on ", format(df$`Modify Date`[1], format = "%b %d, %Y"), "\n\n"))
 
 measures = unique(df$Measure)
 
 for (m in measures) {
-  cat(paste0(m, "\n\n"))
+  cat(paste0("**", m, "** \n\n"))
   cat(paste0(df$`Note Text`[df$Measure==m], "\n\n"))
 }
-
-
 
 ```

@@ -132,6 +132,10 @@ sc_questions <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Se
          `Service Name` = str_extract(Service, "(?<=: ).+")) %>%
   filter(!is.na(`Service ID`))
 
+Encoding(sc_questions$`Mayor's  Action Plan`) <- "UTF-8"
+Encoding(sc_questions$Resiliency) <- "UTF-8"
+Encoding(sc_questions$Equity) <- "UTF-8"
+
 ##scorecard service descriptions ===========
 # sc_service_desc <- readRDS(paste0(path$prop, "service_desc.Rds")) 
 
@@ -151,6 +155,8 @@ sc_story <- import("inputs/Story Behind the Curve.xlsx", skip = 4) %>%
   mutate(`Service ID` = str_extract(Title, "([0-9]{3}[a-d]{1})|([0-9]{3})")) %>%
   rename(Measure = Title2, `Service Name` = Title, Tag = Name) %>%
   filter(!is.na(`Service ID`))
+
+Encoding(sc_story$`Note Text`) <- "UTF-8"
 
 ##rendering ======
 services = sc_questions$`Service ID`
