@@ -86,14 +86,11 @@ summary <- line_item %>%
   select(-`Fund ID`, -`Fund Name`) %>%
   mutate_if(is.numeric, replace_na, 0) %>%
   select(`Agency Name`:`Fund`, sort(names(.))) %>%
-  select(-`FY24 Prop`) %>%
+  # select(-`FY24 Dollars - PROP`) %>%
   relocate(`FY24 Positions - CLS`, .after = !!cols$dollars_cls) %>%
   filter(!!sym(cols$dollars_prop) != 0) %>%
   group_by(`Agency Name`, `Agency Name - Cleaned`, `Service ID`, `Service Name`, Fund) %>%
   summarise_if(is.numeric, sum, na.rm = TRUE) 
-
-##get Proposal budget from Scorecard eventually ==================
-
 
 ##scorecard PM data (if needed) =================
 sc_pms <- readRDS(paste0(path$prop, "scorecard_pms.Rds"))
@@ -111,7 +108,7 @@ sc_pms %<>%
 # sc_questions <- readRDS(paste0(path$prop, "scorecard_questions.Rds"))
   # mutate_at(vars(starts_with("Question")), funs(gsub("â€™s", "'", ., fixed = TRUE)))
 
-sc_questions <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Service") %>%
+sc_questions <- import("inputs/OutcomeStat_20221224.xlsx", which = "Services") %>%
   filter(!grepl("*(MOSS)|*(Copy)|*FY23|*Protocol|*Action Plans|*FY 23", Service)) %>%
   mutate(
   # `Service ID` = str_extract(Service, "[0-9]{3}"),
@@ -159,7 +156,15 @@ sc_story <- import("inputs/Story Behind the Curve.xlsx", skip = 4) %>%
 Encoding(sc_story$`Note Text`) <- "UTF-8"
 
 ##rendering ======
-services = sc_questions$`Service ID`
+#save electeds for later
+elected_services = sc_questions %>% 
+  filter((`Agency` %in% c("City Council", "Council Services", "Comptroller", "State's Attorney", "Sheriff"))) %>%
+  select(`Service ID`) %>%
+  distinct()
+
+services <- setdiff(sc_questions$`Service ID`, c("100", "103", "115", "130", "131", "132", "133", "136", "781", "786", "881", "882", "883", "884", "889"))
+
+services <- sc_questions$`Service ID`
 
 for (i in services) {
   
