@@ -202,7 +202,59 @@ for (i in services) {
                     output_file = paste0("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/outputs/fy", params$fy, "/", i, " ", service, " Budget Proposal.pdf"))
   
   }
-  }
+}
+
+##quasis ======================
+
+quasis <- import("G://Analyst Folders/Sara Brumfield/_ref/Analyst Assignments.xlsx", which = "Quasi") %>%
+  mutate(`Service ID` = as.character(`Clean Program ID`),
+         `Activity ID` = str_pad(as.character(`Activity ID`), 3, "left", 0))
+
+##remake budget data w/ activity #'s ==========
+line_item <- list(
+  cls = readRDS(paste0(path$cls, "expenditure.Rds")),
+  prop = readRDS(paste0(path$prop, "expenditure.Rds")))  %>%
+  map(group_by_at, vars(starts_with("Agency Name"), starts_with("Service"), starts_with("Activity"), starts_with("Fund"))) %>%
+  map(summarize_at, vars(starts_with("FY")), sum, na.rm = TRUE) %>%
+  map(ungroup)
+
+line_item$cls <- line_item$cls %>%
+  select(-ends_with("Name"), -ends_with("Actual"), -!!paste0("FY", params$fy - 1, " Budget")) %>%
+  rename(!!cols$dollars_cls := !!paste0("FY", params$fy, " Budget"))
+
+line_item$prop <- line_item$prop %>%
+  select(`Agency Name`:`Fund Name`, !!cols$expend$prior, !!cols$expend$projection, 
+         !!cols$dollars_prop := !!paste0("FY", params$fy, " Budget")) %>%
+  set_colnames(gsub("Budget|Actual", "Dollars", names(.)))
+
+line_item <- line_item$prop %>%
+  left_join(line_item$cls) %>%
+  relocate(!!cols$dollars_prop, .after = last_col())
+
+##no positions in quasis--use previous position data from regular services
+
+
+#assign quasi-agencies
+quasi_lines <- line_item %>% left_join(quasis, by = c("Service ID", "Activity ID")) %>%
+  filter(`Program ID` %in% c("493a", "493b", "493c", "493d", "590a", "590b", "590c", "824", "820", "446", "828", "815", "809", "810",
+                             "811", "812", "813", "814", "385a", "385b"))
+
+summary <- quasi_lines %>%
+  left_join(positions) %>%
+  mutate(`Fund` = case_when(`Fund ID` == 1001 ~ "General Fund",
+                            TRUE ~ "All Other Funds")) %>%
+  relocate(Fund, .after = `Fund Name`) %>%
+  select(`Agency Name.y`, `Program ID`, Fund, 
+         `FY22 Dollars`, `FY23 Dollars`, `FY24 Dollars - CLS`, `FY24 Dollars - PROP`,
+         `FY22 Positions`, `FY23 Positions`, `FY24 Positions - CLS`, `FY24 Positions - PROP`) %>%
+  mutate_if(is.numeric, replace_na, 0) %>%
+  rename(`Service ID` = `Program ID`, `Service Name` = `Agency Name.y`) %>%
+  relocate(`FY24 Positions - CLS`, .after = !!cols$dollars_cls) %>%
+  filter(!!sym(cols$dollars_prop) != 0) %>%
+  arrange(`Service ID`) %>%
+  group_by(`Service ID`, `Service Name`, Fund) %>%
+  summarise_if(is.numeric, sum, na.rm = TRUE) 
+
 
 ##must label proposals as Health1 and Health2 for big agencies================
 # sc_enhancements <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Enhancement") %>%
