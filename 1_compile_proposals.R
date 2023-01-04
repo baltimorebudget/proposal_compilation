@@ -157,20 +157,38 @@ Encoding(sc_story$`Note Text`) <- "UTF-8"
 
 ##rendering ======
 #save electeds for later
-elected_services = sc_questions %>% 
-  filter((`Agency` %in% c("City Council", "Council Services", "Comptroller", "State's Attorney", "Sheriff"))) %>%
-  select(`Service ID`) %>%
-  distinct()
-
-services <- setdiff(sc_questions$`Service ID`, c("100", "103", "115", "130", "131", "132", "133", "136", "781", "786", "881", "882", "883", "884", "889"))
+# elected_services = sc_questions %>% 
+#   filter((`Agency` %in% c("City Council", "Council Services", "Comptroller", "State's Attorney", "Sheriff"))) %>%
+#   select(`Service ID`) %>%
+#   distinct()
 
 services <- sc_questions$`Service ID`
 
 for (i in services) {
   
+  if (i %in% c("100", "103", "115", "130", "131", "132", "133", "136", "781", "786", "881", "882", "883", "884", "889",
+               "100",  "103",  "106",  "107",  "109",  "110",  "115",  "117",  "125",  "128",  "130",  "131",  "132",
+               "133",  "136",  "148",  "150",  "152",  "154", "155",  "168",  "185",  "189",  "303",  "305",  "307",
+               "308",  "310",  "311",  "315",  "316",  "356",  "385a", "385b", "446",  "493a", "493b", "493c",
+               "493d", "500",  "548",  "590b", "590c", "593",  "600",  "602",  "604",  "605",  "608",  "609",  "610",
+               "611",  "612",  "613",  "614",  "615",  "617", "618",  "619",  "621",  "622",  "623",  "624",
+               "625",  "626",  "627",  "628",  "632",  "634",  "635",  "637",  "638",  "640",  "642",  "644",  "645", 
+               "646",  "647",  "648",  "649",  "650",  "651",  "652",  "653",  "654", "656",  "660",  "661",  "662",
+               "663",  "664",  "670",  "671",  "672",  "673", "674",  "675",  "676",  "681",  "682",  "683",  "684",
+               "685",  "687",  "688",  "689",  "690",  "691",  "692",  "693",  "694",  "695",  "696",  "697", 
+               "698",  "699", "700",  "701",  "702",  "703",  "704",  "705",  "707",  "708",  "710",  "711",  "715",
+               "716",  "717",  "718",  "720",  "721",  "722", "723",  "724", "725",  "726",  "727",  "730",  "731",
+               "734",  "737",  "738",  "740",  "741",  "742",  "745",  "747",  "748",  "749",  "750",  "751", 
+               "752",  "754",  "757",  "758",  "761",  "762",  "763",  "765",  "768",  "770",  "771",  "772",  "773",
+               "781",  "786",  "788",  "791",  "792",  "793", "794", "795",  "796",  "797",  "798",  "800",  "802",
+               "803",  "804",  "805",  "806",  "807",  "809")) {
+    
+  } else {
+  
   info <- sc_questions %>%
     filter(`Service ID` == i) %>%
-    mutate(`Service Name` = gsub(":", "", `Service Name`))
+    mutate(`Service Name` = gsub(":", "", `Service Name`),
+           `Service Name` = gsub("/", "-", `Service Name`))
   
   service = info$`Service Name`
   id = i
@@ -183,7 +201,8 @@ for (i in services) {
   rmarkdown::render("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/r/service_pages.Rmd",
                     output_file = paste0("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/outputs/fy", params$fy, "/", i, " ", service, " Budget Proposal.pdf"))
   
-}
+  }
+  }
 
 ##must label proposals as Health1 and Health2 for big agencies================
 # sc_enhancements <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Enhancement") %>%

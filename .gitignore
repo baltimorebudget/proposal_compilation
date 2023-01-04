@@ -9,3 +9,4 @@ inputs/
 _main.Rmd
 *.pdf
 r/Courts
+*.aux

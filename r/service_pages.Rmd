@@ -28,7 +28,7 @@ colnames(budget) <- c("Fund", "Actual $", "Actual Pos", "Adopted $", "Adopted Po
 
 ### Budget Information
 
-*Budget data is from BPFS as of December 28, 2022.*
+*Budget data is from BPFS as of December 28, 2022. This data may differ from what was entered into Scorecard's Fiscal 2024 Proposed Budget.*
 
 ```{r budget_summary, echo = FALSE, results = 'asis', warning=FALSE, out.width="100%"}
 ##replace budget data source
@@ -55,7 +55,10 @@ budget %>%
 
 df <- data %>%
   select(`Budget Proposal`) %>%
-  separate(`Budget Proposal`, into = c("Budget", "Question 1", "Question 2", "Question 3"), sep = "\\s+[1-3].\\s") %>%
+  # separate(`Budget Proposal`, into = c("Budget", "Question 1", "Question 2", "Question 3"), sep = "\\s+[1-3].\\s") %>%
+  separate(`Budget Proposal`, into = c("Budget", "Question 1"), sep = "(1[.]\\s)") %>%
+  separate(`Question 1`, into = c("Question 1", "Question 2"), sep = "(2[.]\\s)") %>%
+  separate(`Question 2`, into = c("Question 2", "Question 3"), sep = "(3[.]\\s)") %>%
   mutate(`Question 1` = str_replace(`Question 1`, "Explain any budget changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.",""),
          `Question 2` = str_replace(`Question 2`, "Explain any staffing changes between the Fiscal 2024 CLS Budget and Fiscal 2024 Proposed Budget.",""),
          `Question 3` = str_replace(`Question 3`, "Describe how these changes impact service delivery.",""))
@@ -229,7 +232,7 @@ output %>%
 ```{r curve, echo = FALSE, warning = FALSE, results='asis'}
 
 df <- sc_story %>%
-  filter(id == `Service ID`) %>%
+  filter(id == `Service ID` & !grepl("MOSS|Copy", `Measure`)) %>%
   select(Measure, `Note Text`, `Modify Date`) %>%
   mutate(`Measure` = gsub("#", "number of", `Measure`)) %>%
   distinct()
