@@ -233,7 +233,6 @@ line_item <- line_item$prop %>%
 
 ##no positions in quasis--use previous position data from regular services
 
-
 #assign quasi-agencies
 quasi_lines <- line_item %>% left_join(quasis, by = c("Service ID", "Activity ID")) %>%
   filter(`Program ID` %in% c("493a", "493b", "493c", "493d", "590a", "590b", "590c", "824", "820", "446", "828", "815", "809", "810",
@@ -244,17 +243,56 @@ summary <- quasi_lines %>%
   mutate(`Fund` = case_when(`Fund ID` == 1001 ~ "General Fund",
                             TRUE ~ "All Other Funds")) %>%
   relocate(Fund, .after = `Fund Name`) %>%
-  select(`Agency Name.y`, `Program ID`, Fund, 
+  select(`Agency Name.y`, `Agency Name.x`, `Agency Name - Cleaned`, `Program ID`, Fund, 
          `FY22 Dollars`, `FY23 Dollars`, `FY24 Dollars - CLS`, `FY24 Dollars - PROP`,
          `FY22 Positions`, `FY23 Positions`, `FY24 Positions - CLS`, `FY24 Positions - PROP`) %>%
   mutate_if(is.numeric, replace_na, 0) %>%
-  rename(`Service ID` = `Program ID`, `Service Name` = `Agency Name.y`) %>%
-  relocate(`FY24 Positions - CLS`, .after = !!cols$dollars_cls) %>%
+  rename(`Service ID` = `Program ID`, `Service Name` = `Agency Name.y`, `Agency Name` = `Agency Name.x`) %>%
+  # relocate(`FY24 Positions - CLS`, .after = !!cols$dollars_cls) %>%
   filter(!!sym(cols$dollars_prop) != 0) %>%
   arrange(`Service ID`) %>%
-  group_by(`Service ID`, `Service Name`, Fund) %>%
-  summarise_if(is.numeric, sum, na.rm = TRUE) 
+  group_by(`Agency Name`, `Agency Name - Cleaned`, `Service ID`, `Service Name`, Fund) %>%
+  summarise_if(is.numeric, sum, na.rm = TRUE) %>%
+  select(`Agency Name`, `Agency Name - Cleaned`, `Service ID`, `Service Name`, Fund, `FY22 Dollars`, `FY22 Positions`,
+         `FY23 Dollars`, `FY23 Positions`, `FY24 Dollars - CLS`, `FY24 Positions - CLS`, `FY24 Dollars - PROP`, `FY24 Positions - PROP`)
 
+##assign quasis to scorecard data (only PMs need quasi agency ID)
+sc_pms <- sc_pms %>% left_join(sc_story, by = "Measure") %>%
+  rename(`Service ID` = `Service ID.y`, Type = Type.x, `Service Name` = `Service Name.x`) %>%
+  select(!ends_with(".y"), -`Service ID.x`, -`Note Text`, -`Modify Date`, -Tag) %>%
+  relocate(`Service ID`, .before = `Service Name`)  %>%
+  filter(`Service ID` %in% c("493a", "493b", "493c", "493d", "590a", "590b", "590c", "824", "820", "446", "828", "815", "809", "810",
+                             "811", "812", "813", "814", "385a", "385b")) %>%
+  distinct()
+
+# sc_pms$`Service ID`[match(sc_pms$Measure, sc_story$Measure) & !is.na(sc_pms$`Service ID`)] <- sc_story$`Service ID`
+
+##render quasis ========
+quasis <- c("493a", "493b", "493c", "493d", "590a", "590b", "590c", "824", "820", "446", "828", "815", "809", "810",
+            "811", "812", "813", "814", "385a", "385b")
+
+for (i in quasis) {
+  
+  if (i %in% sc_questions$`Service ID`){
+    
+    info <- sc_questions %>%
+      filter(`Service ID` == i) %>%
+      mutate(`Service Name` = gsub(":", "", `Service Name`),
+             `Service Name` = gsub("/", "-", `Service Name`))
+    
+    service = info$`Service Name`
+    id = i
+    agency = info$Agency
+    description = info$Description
+    pillar = info$Pillar
+    fy24_dollars = sum(summary$`FY24 Dollars - PROP`[summary$`Service ID` == i], na.rm = TRUE)
+    fy24_positions = sum(summary$`FY24 Positions - PROP`[summary$`Service ID` == i], na.rm = TRUE)
+    
+    rmarkdown::render("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/r/service_pages.Rmd",
+                      output_file = paste0("G:/Analyst Folders/Sara Brumfield/planning_year/2b_proposal_compilation/outputs/fy", params$fy, "/", i, " ", service, " Budget Proposal.pdf"))
+    
+  }
+}
 
 ##must label proposals as Health1 and Health2 for big agencies================
 # sc_enhancements <- import("inputs/Service Note Export_12-16-2022.xlsx", which = "Enhancement") %>%
